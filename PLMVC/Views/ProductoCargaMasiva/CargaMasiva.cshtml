@@ -1,0 +1,59 @@
+﻿
+@{
+    ViewData["Title"] = "CargaMasiva";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1 style="font-family:'Times New Roman'" class="text-center">Carga Masiva</h1>
+<br />
+<hr />
+
+
+
+@using (Html.BeginForm("CargaMasiva","ProductoCargaMasiva", FormMethod.Post, new { enctype = "multipart/form-data" } ))
+{
+    <div class="row">
+        <div class="col-md-4">
+            <input type="file" class="form-control" id="archivoCargaMasiva" name="archivoCargaMasiva" onchange="ValidarExtension()" />
+        </div>
+    </div>
+    <br />
+    <div class="text-left">
+        <button type="submit" class="btn btn-success" style="font-family:'Times New Roman'">CARGAR ARCHIVO</button>
+    </div>
+}
+
+<script type="text/javascript">
+
+    function ValidarExtension()
+    {
+        var archivo = document.getElementById('archivoCargaMasiva').value.split('.').pop().toLowerCase();
+        switch(archivo){
+            case 'csv':
+            case 'xlsx':
+            break;
+            default:
+            alert ('La extension del archivo no es valida');
+                $("#archivoCargaMasiva").val("")
+            return false;
+        }
+    }
+
+    function ValidarExtension2() {
+        var extensionesPermitidas = ['csv', 'xlsx'];
+        var extensionArchivo = document.getElementById('archivoCargaMasiva').value.split('.').pop().toLowerCase();
+        var isValidFile = false; //saber si es valida o no es valida
+        for (var index in extensionesPermitidas) {
+            if (extensionArchivo === extensionesPermitidas[index]) {
+                isValidFile = true;
+                break;
+            }
+        }
+        if (!isValidFile) {
+            alert('Las extensiones permitidas son : *.' + extensionesPermitidas.join(', *.'));
+            $("#archivoCargaMasiva").val("")
+        }
+        return isValidFile;
+    }
+</script>
+
