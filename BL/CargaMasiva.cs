@@ -46,23 +46,22 @@ namespace BL
                         {
                             if (bandera == false)
                             {
-                                /*
+                                dt.Columns.Add(fields[i]);
+                                /* reemplazar tildes en las columnas
                                 string palabaConTildes = "áéíóúñ";
                                 string palabaSinTildes = Regex.Replace(palabaConTildes.Normalize(NormalizationForm.FormD), @"[^a-zA-z0-9 ]+", "");
                                 */
                                 //dt.Columns.Add(Regex.Replace(fields[i].Normalize(NormalizationForm.FormD), @"[^a-zA-z0-9 ]+", ""));;
                                 /*byte[] tempBytes;
                                 tempBytes = System.Text.Encoding.GetEncoding(28591).GetBytes(fields[i]);
-                                string sinAcento = System.Text.Encoding.UTF8.GetString(tempBytes);*/
-
-                                dt.Columns.Add(fields[i]);
+                                string sinAcento = System.Text.Encoding.UTF8.GetString(tempBytes);
+                                */
                             }
                             else
                             {
                                 int count = 0;
 
-                                DataRow row = dt.NewRow();
-
+                                DataRow row = dt.NewRow(); // creamos nueva row para cada insercion y de esta forma vaya insertando hacia abajo cada linea leida. 
 
                                 if (fields[0] == "" || fields[0] == null)
                                 {
@@ -146,8 +145,7 @@ namespace BL
                                 break;
                             }
                         }
-
-                        /*
+                        /* AÑADE FILAS DE FORMA VERTICAL
                             if  (bandera == false)
                             {
                                 foreach (var registro in fields)
@@ -168,6 +166,46 @@ namespace BL
                     }
                     parser.Close();
 
+
+
+                    //COPIAR DATOS DE UNA TABLA A DOS POR SEPARADO PARA HACER EL BULCK COPY
+                    DataTable productoTable = new DataTable();
+                    productoTable.Columns.Add("Nombre", typeof(System.String));
+                    productoTable.Columns.Add("Precio Unitario", typeof(decimal));
+                    productoTable.Columns.Add("Stock", typeof(int));
+                    productoTable.Columns.Add("Descripción", typeof(string));
+                    productoTable.Columns.Add("FechaRegistro", typeof(DateTime));
+
+
+                    DataTable proveedorTable = new DataTable();
+                    proveedorTable.Columns.Add("IdProveedor", typeof(int));
+                    proveedorTable.Columns.Add("Proveedor", typeof(string));
+                    proveedorTable.Columns.Add("Numero", typeof(Int64));
+                    proveedorTable.Columns.Add("Direccion", typeof(string));
+
+
+
+                    foreach (DataRow row in dt.Rows) 
+                    { 
+                        var r = productoTable.NewRow();
+                        var r2 = proveedorTable.NewRow();
+
+                        r["Nombre"] = row["Nombre"];
+                        r["Precio Unitario"] = row["Precio Unitario"];
+                        r["Stock"] = row["Stock"];
+                        r["Descripción"] = row["Descripción"];
+                        r["FechaRegistro"] = row["FechaRegistro"];
+
+                        r2["IdProveedor"] = row["IdProveedor"];
+                        r2["Proveedor"] = row["Proveedor"];
+                        r2["Numero"] = row["Numero"];
+                        r2["Direccion"] = row["Direccion"];
+
+                        productoTable.Rows.Add(r);
+                        proveedorTable.Rows.Add(r2);
+                    }
+
+
                     using (SqlTransaction transaction = context.BeginTransaction())
                     {
                         using (SqlBulkCopy bulkCopy = new SqlBulkCopy(context, SqlBulkCopyOptions.Default, transaction))
@@ -175,6 +213,25 @@ namespace BL
                             try
                             {
                                 bulkCopy.DestinationTableName = "Producto";
+                                //bulkCopy.WriteToServer();
+                                transaction.Commit();
+                            }
+                            catch (Exception)
+                            {
+                                transaction.Rollback();
+                                context.Close();
+                                throw;
+                            }
+                        }
+                    }
+
+                    using (SqlTransaction transaction = context.BeginTransaction())
+                    {
+                        using (SqlBulkCopy bulkCopy = new SqlBulkCopy(context, SqlBulkCopyOptions.Default, transaction))
+                        {
+                            try
+                            {
+                                bulkCopy.DestinationTableName = "Proveedor";
                                 //bulkCopy.WriteToServer();
                                 transaction.Commit();
                             }
